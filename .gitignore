@@ -8,6 +8,7 @@ __pycache__/
 
 # Вивід парсерів — сирі дані, не вихідний код
 results_*.json
+results.json
 merged_results.json
 merged_results.xlsx
 avto-ria-cities.json
@@ -16,3 +17,5 @@ sto.pdf
 
 # Залиш зразок формату виводу, якщо покладеш його сюди:
 !data/sample/*.json
+
+.idea/
