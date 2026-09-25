@@ -1,0 +1,18 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Секрети — ніколи не в гіт
+.env
+
+# Вивід парсерів — сирі дані, не вихідний код
+results_*.json
+merged_results.json
+merged_results.xlsx
+avto-ria-cities.json
+category.json
+sto.pdf
+
+# Залиш зразок формату виводу, якщо покладеш його сюди:
+!data/sample/*.json
