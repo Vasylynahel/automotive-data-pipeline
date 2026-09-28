@@ -4,7 +4,10 @@ pipeline/db.py — уся логіка роботи з базою: схема, u
 
 import hashlib
 import os
+import logging
 from datetime import datetime, timezone
+
+logger = logging.getLogger(__name__)
 
 DB_CONFIG = {
     "host": os.getenv("DB_HOST", "localhost"),
@@ -78,12 +81,21 @@ def mark_deleted(cursor, fresh_record_ids):
         (datetime.now(timezone.utc), fresh_record_ids),
     )
 
+def looks_complete(cursor, parsed_records, min_ratio=0.8):
+    cursor.execute("SELECT count(*) FROM raw_companies WHERE is_active = true")
+    known = cursor.fetchone()[0]
+    return known == 0 or len(parsed_records) >= known * min_ratio
 
-def run_pipeline_once(cursor, parsed_records):
-    """Один повний прогін: upsert усіх свіжих записів + позначення видалених."""
+def run_pipeline_once(cursor, parsed_records, mark_missing=False, min_ratio=0.8):
+    complete = looks_complete(cursor, parsed_records, min_ratio)   # ДО upsert'ів
+
     fresh_ids = []
     for record in parsed_records:
         upsert_record(cursor, record)
         fresh_ids.append(record["record_id"])
 
-    mark_deleted(cursor, fresh_ids)
+    if mark_missing:
+        if complete:
+            mark_deleted(cursor, fresh_ids)
+        else:
+            logger.error("Зібрано %d записів, це підозріло мало; видалення пропущено", len(parsed_records))
