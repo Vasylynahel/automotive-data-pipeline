@@ -97,7 +97,7 @@ def run():
     BASE_URL = SITE_URL + '{city}/avto-moto/page/{page}/'
 
     all_results = []
-    for slug, name in cities.items():
+    for slug, name in list(cities.items())[:2]:
         page = 1
 
         while True:
@@ -113,9 +113,11 @@ def run():
 
             page += 1
             time.sleep(random.uniform(0.2, 0.5))
+    return all_results
 
+    ''' для пайплайну потрібно повернути список, а не зберегти дані у файл
     with open('results_top_20.json', 'w', encoding='utf-8') as f:
         json.dump(all_results, f, ensure_ascii=False)
-
+    '''
 if __name__ == '__main__':
     run()
