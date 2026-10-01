@@ -13,7 +13,7 @@ def main():
     cursor = conn.cursor()
     cursor.execute(CREATE_TABLE_SQL)
 
-    run_pipeline_once(cursor, records)
+    run_pipeline_once(cursor, records, mark_missing=True)
 
     cursor.close()
     conn.close()

@@ -15,6 +15,16 @@ SITE_URL = 'https://top20.ua/'
 session = requests.Session()
 CLIENT_ID = str(uuid.uuid4())
 
+def fetch_with_retry(url, method='get', max_attempts=3, **kwargs):
+    for attempt in range(1, max_attempts + 1):
+        try:
+            return getattr(session, method)(url, **kwargs)
+        except requests.exceptions.Timeout:
+            logger.warning(f'Timeout на {url}, спроба {attempt}/{max_attempts}')
+            if attempt == max_attempts:
+                raise
+            time.sleep(2 * attempt)
+
 def make_record_id(city, name, street):
     raw = f"{city}|{name}|{street}"
     return hashlib.md5(raw.encode('utf-8')).hexdigest()
@@ -43,7 +53,7 @@ def get_phone(slug, address_id, company_url):
     }
 
     try:
-        response = session.post(f'{SITE_URL}{slug}/company/phone', data=data, headers=headers, impersonate='chrome120')
+        response = fetch_with_retry(f'{SITE_URL}{slug}/company/phone', method='post', data=data, headers=headers, impersonate='chrome120')
         if response.status_code != 200:
             return None
         return response.json()
@@ -52,7 +62,7 @@ def get_phone(slug, address_id, company_url):
         return None
 
 def get_items(page_url, slug, name, page):
-    response = session.get(page_url, impersonate='chrome120', timeout=60)
+    response = fetch_with_retry(page_url, impersonate='chrome120', timeout=60)
     soup = BeautifulSoup(response.text, 'html.parser')
     cards = soup.find_all('div', class_='card js-company')
     if page > 1 and response.url != page_url:
@@ -97,7 +107,7 @@ def run():
     BASE_URL = SITE_URL + '{city}/avto-moto/page/{page}/'
 
     all_results = []
-    for slug, name in list(cities.items())[:2]:
+    for slug, name in cities.items():
         page = 1
 
         while True:
